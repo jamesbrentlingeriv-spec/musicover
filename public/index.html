@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Musicovery - AI Music Discovery</title>
+  <meta name="description" content="Musicovery - AI-powered music discovery across Spotify, YouTube, Bandcamp & more">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Musicovery">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a25;
+      --surface3: #222230;
+      --text: #e8e8f0;
+      --text2: #9898b0;
+      --accent: #a855f7;
+      --accent2: #7c3aed;
+      --accent-glow: rgba(168, 85, 247, 0.25);
+      --green: #22c55e;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --spotify: #1db954;
+      --youtube: #ff0000;
+      --bandcamp: #629aa9;
+      --soundcloud: #ff8800;
+      --gradient-1: linear-gradient(135deg, #a855f7, #6366f1);
+      --gradient-2: linear-gradient(135deg, #ec4899, #f59e0b);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background blobs */
+    .bg-blobs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+      animation: floatBlob 20s ease-in-out infinite;
+    }
+    .bg-blob:nth-child(1) {
+      width: 600px;
+      height: 600px;
+      background: #a855f7;
+      top: -200px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+    .bg-blob:nth-child(2) {
+      width: 500px;
+      height: 500px;
+      background: #6366f1;
+      bottom: -150px;
+      right: -100px;
+      animation-delay: -7s;
+    }
+    .bg-blob:nth-child(3) {
+      width: 400px;
+      height: 400px;
+      background: #ec4899;
+      top: 50%;
+      left: 50%;
+      animation-delay: -14s;
+    }
+
+    @keyframes floatBlob {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(80px, -60px) scale(1.1); }
+      50% { transform: translate(-40px, 80px) scale(0.9); }
+      75% { transform: translate(-80px, -40px) scale(1.05); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 60px 0 40px;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--gradient-1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 4px 24px var(--accent-glow);
+    }
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+    .subtitle {
+      color: var(--text2);
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-top: 8px;
+    }
+
+    /* Search card */
+    .search-card {
+      background: var(--surface);
+      border: 1px solid var(--surface3);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 32px;
+    }
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: var(--text2);
+      pointer-events: none;
+    }
+    #searchInput {
+      width: 100%;
+      padding: 16px 16px 16px 48px;
+      background: var(--surface2);
+      border: 1px solid var(--surface3);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 1.05rem;
+      font-family: inherit;
+      outline: none;
+      transition: var(--transition);
+    }
+    #searchInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    #searchInput::placeholder {
+      color: var(--text2);
+    }
+    #searchBtn {
+      padding: 16px 32px;
+      background: var(--gradient-1);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #searchBtn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px var(--accent-glow);
+    }
+    #searchBtn:active {
+      transform: translateY(0);
+    }
+    #searchBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Slider section */
+    .slider-section {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 20px 24px;
+    }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .slider-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .slider-badge {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      transition: var(--transition);
+    }
+    .badge-indie {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+    }
+    .badge-mid {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--orange);
+    }
+    .badge-mainstream {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--blue);
+    }
+    .slider-labels-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text2);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .slider-labels-row span:first-child {
+      color: var(--green);
+    }
+    .slider-labels-row span:last-child {
+      color: var(--blue);
+    }
+
+    /* Custom range slider */
+    .range-slider-wrap {
+      position: relative;
+      height: 40px;
+      display: flex;
+      align-items: center;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, var(--green), var(--orange) 50%, var(--blue));
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      transition: var(--transition);
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    /* Loading */
+    .loading-wrap {
+      display: none;
+      text-align: center;
+      padding: 60px 0;
+    }
+    .loading-wrap.active {
+      display: block;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--surface3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      color: var(--text2);
+      font-size: 1rem;
+    }
+
+    /* Error */
+    .error-msg {
+      display: none;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--red);
+      padding: 16px 20px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+    .error-msg.active {
+      display: block;
+    }
+
+    /* Results */
+    .results-wrap {
+      display: none;
+    }
+    .results-wrap.active {
+      display: block;
+    }
+    .results-header {
+      margin-bottom: 20px;
+    }
+    .results-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .results-query {
+      color: var(--accent);
+    }
+    .results-subtitle {
+      color: var(--text2);
+      margin-top: 4px;
+      font-size: 0.9rem;
+    }
+    .rec-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 640px) {
+      .rec-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .rec-card {
+      background: var(--surface);
+      border: 1px solid var(--surface3);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .rec-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+    }
+    .rec-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .rec-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .rec-type {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .type-artist {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+    }
+    .type-song {
+      background: rgba(236, 72, 153, 0.2);
+      color: #f472b6;
+    }
+    .rec-genre {
+      display: inline-block;
+      font-size: 0.8rem;
+      color: var(--accent);
+      background: rgba(168, 85, 247, 0.1);
+      padding: 2px 10px;
+      border-radius: 5px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .rec-year {
+      display: inline-block;
+      font-size: 0.8rem;
+      color: var(--text2);
+      margin-left: 6px;
+    }
+    .rec-desc {
+      font-size: 0.9rem;
+      color: var(--text2);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .pop-level {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+    .pop-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .pop-underground .pop-dot { background: var(--green); }
+    .pop-indie .pop-dot { background: #84cc16; }
+    .pop-mid .pop-dot { background: var(--orange); }
+    .pop-mainstream .pop-dot { background: var(--blue); }
+    .pop-superstar .pop-dot { background: #a78bfa; }
+    .pop-underground { color: var(--green); }
+    .pop-indie { color: #84cc16; }
+    .pop-mid { color: var(--orange); }
+    .pop-mainstream { color: var(--blue); }
+    .pop-superstar { color: #a78bfa; }
+
+    .rec-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .rec-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+    .rec-link:hover {
+      transform: translateY(-1px);
+    }
+    .link-spotify {
+      background: rgba(29, 185, 84, 0.12);
+      color: var(--spotify);
+      border-color: rgba(29, 185, 84, 0.3);
+    }
+    .link-spotify:hover {
+      background: rgba(29, 185, 84, 0.2);
+    }
+    .link-youtube {
+      background: rgba(255, 0, 0, 0.1);
+      color: #ff4444;
+      border-color: rgba(255, 0, 0, 0.3);
+    }
+    .link-youtube:hover {
+      background: rgba(255, 0, 0, 0.18);
+    }
+    .link-bandcamp {
+      background: rgba(98, 154, 169, 0.12);
+      color: var(--bandcamp);
+      border-color: rgba(98, 154, 169, 0.3);
+    }
+    .link-bandcamp:hover {
+      background: rgba(98, 154, 169, 0.2);
+    }
+    .link-soundcloud {
+      background: rgba(255, 136, 0, 0.12);
+      color: var(--soundcloud);
+      border-color: rgba(255, 136, 0, 0.3);
+    }
+    .link-soundcloud:hover {
+      background: rgba(255, 136, 0, 0.2);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text2);
+      font-size: 0.85rem;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .search-row {
+        flex-direction: column;
+      }
+      .container {
+        padding: 20px 16px 60px;
+      }
+      header {
+        padding: 30px 0 24px;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      .search-card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs">
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">🎵</div>
+      </div>
+      <h1>Musicovery</h1>
+      <p class="subtitle">Discover songs & artists you'll love — powered by AI</p>
+    </header>
+
+    <div class="search-card">
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder='Try "Bohemian Rhapsody by Queen" or just "Radiohead"...' autocomplete="off">
+        </div>
+        <button id="searchBtn">✨ Discover</button>
+      </div>
+
+      <div class="slider-section">
+        <div class="slider-header">
+          <span class="slider-label">Popularity Bias</span>
+          <span class="slider-badge badge-mid" id="biasBadge">Balanced</span>
+        </div>
+        <div class="slider-labels-row">
+          <span>🎸 Indie / Underground</span>
+          <span>🌟 Mainstream / Popular</span>
+        </div>
+        <div class="range-slider-wrap">
+          <input type="range" id="popularitySlider" min="0" max="100" value="50" step="5">
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="loading-wrap" id="loadingWrap">
+      <div class="spinner"></div>
+      <p class="loading-text">Finding the best matches for you...</p>
+    </div>
+
+    <div class="results-wrap" id="resultsWrap">
+      <div class="results-header">
+        <h2 class="results-title">Recommendations based on <span class="results-query" id="resultsQuery"></span></h2>
+        <p class="results-subtitle" id="resultsSubtitle"></p>
+      </div>
+      <div class="rec-grid" id="recGrid"></div>
+    </div>
+
+    <footer>
+      Powered by <a href="https://openrouter.ai" target="_blank">OpenRouter AI</a> · Discover music across the web
+    </footer>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const popularitySlider = document.getElementById('popularitySlider');
+    const biasBadge = document.getElementById('biasBadge');
+    const loadingWrap = document.getElementById('loadingWrap');
+    const errorMsg = document.getElementById('errorMsg');
+    const resultsWrap = document.getElementById('resultsWrap');
+    const resultsQuery = document.getElementById('resultsQuery');
+    const resultsSubtitle = document.getElementById('resultsSubtitle');
+    const recGrid = document.getElementById('recGrid');
+
+    // Update badge based on slider
+    function updateBadge(value) {
+      biasBadge.classList.remove('badge-indie', 'badge-mid', 'badge-mainstream');
+      if (value <= 25) {
+        biasBadge.textContent = 'Mostly Indie';
+        biasBadge.classList.add('badge-indie');
+      } else if (value <= 45) {
+        biasBadge.textContent = 'Leaning Indie';
+        biasBadge.classList.add('badge-indie');
+      } else if (value <= 55) {
+        biasBadge.textContent = 'Balanced';
+        biasBadge.classList.add('badge-mid');
+      } else if (value <= 75) {
+        biasBadge.textContent = 'Leaning Mainstream';
+        biasBadge.classList.add('badge-mainstream');
+      } else {
+        biasBadge.textContent = 'Mostly Mainstream';
+        biasBadge.classList.add('badge-mainstream');
+      }
+    }
+
+    popularitySlider.addEventListener('input', () => {
+      updateBadge(parseInt(popularitySlider.value));
+    });
+
+    // Handle search
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') performSearch();
+    });
+
+    async function performSearch() {
+      const query = searchInput.value.trim();
+      if (!query) {
+        showError('Please enter a song or artist name.');
+        return;
+      }
+
+      // Reset UI
+      errorMsg.classList.remove('active');
+      resultsWrap.classList.remove('active');
+      loadingWrap.classList.add('active');
+      searchBtn.disabled = true;
+      searchBtn.innerHTML = '⏳ Searching...';
+
+      try {
+        const response = await fetch('/api/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: query,
+            popularityBias: parseInt(popularitySlider.value)
+          })
+        });
+
+        // Check if response is actually JSON before parsing
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Non-JSON response:', text.slice(0, 300));
+          throw new Error('Server returned an unexpected response. Is the server running?');
+        }
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (jsonErr) {
+          throw new Error('Failed to parse server response. The server may be down or not configured correctly.');
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Something went wrong.');
+        }
+
+        renderResults(data, query);
+      } catch (err) {
+        console.error('Search error:', err);
+        showError(err.message || 'Failed to get recommendations. Please try again.');
+      } finally {
+        loadingWrap.classList.remove('active');
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = '✨ Discover';
+      }
+    }
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.add('active');
+      resultsWrap.classList.remove('active');
+    }
+
+    function renderResults(data, originalQuery) {
+      resultsQuery.textContent = `"${data.query_name || originalQuery}"`;
+      const popBias = parseInt(popularitySlider.value);
+      const indieBias = 100 - popBias;
+      resultsSubtitle.textContent = `Found ${data.recommendations.length} recommendations · ${indieBias}% indie / ${popBias}% mainstream bias`;
+
+      // Count popularity distribution
+      const popCounts = {};
+      data.recommendations.forEach(r => {
+        const level = r.popularityLevel || 'mid';
+        popCounts[level] = (popCounts[level] || 0) + 1;
+      });
+
+      recGrid.innerHTML = data.recommendations.map((rec, i) => {
+        const popClass = `pop-${rec.popularityLevel || 'mid'}`;
+        const popLabel = (rec.popularityLevel || 'mid').charAt(0).toUpperCase() + (rec.popularityLevel || 'mid').slice(1);
+        const typeClass = rec.type === 'artist' ? 'type-artist' : 'type-song';
+        
+        const spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(rec.spotifyQuery || rec.name)}`;
+        const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(rec.youtubeQuery || rec.name)}`;
+        const bandcampUrl = `https://bandcamp.com/search?q=${encodeURIComponent(rec.bandcampQuery || rec.name)}`;
+        const soundcloudUrl = `https://soundcloud.com/search?q=${encodeURIComponent(rec.soundcloudQuery || rec.name)}`;
+
+        return `
+          <div class="rec-card" style="animation: fadeInUp 0.4s ${i * 0.05}s both;">
+            <div class="rec-card-header">
+              <span class="rec-name">${escapeHtml(rec.name)}</span>
+              <span class="rec-type ${typeClass}">${rec.type || 'artist'}</span>
+            </div>
+            <span class="rec-genre">${escapeHtml(rec.genre || 'Various')}</span>
+            ${rec.year ? `<span class="rec-year">· ${rec.year}</span>` : ''}
+            <p class="rec-desc">${escapeHtml(rec.description || '')}</p>
+            <div class="pop-level ${popClass}">
+              <span class="pop-dot"></span> ${popLabel}
+            </div>
+            <div class="rec-links">
+              <a href="${spotifyUrl}" target="_blank" class="rec-link link-spotify" title="Search on Spotify">
+                🟢 Spotify
+              </a>
+              <a href="${youtubeUrl}" target="_blank" class="rec-link link-youtube" title="Search on YouTube">
+                ▶️ YouTube
+              </a>
+              <a href="${bandcampUrl}" target="_blank" class="rec-link link-bandcamp" title="Search on Bandcamp">
+                🎸 Bandcamp
+              </a>
+              <a href="${soundcloudUrl}" target="_blank" class="rec-link link-soundcloud" title="Search on SoundCloud">
+                ☁️ SoundCloud
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      resultsWrap.classList.add('active');
+      resultsWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Add fadeInUp animation
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+
+    // Focus input on load
+    searchInput.focus();
+
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('[SW] Registered:', reg.scope))
+        .catch(err => console.log('[SW] Registration failed:', err));
+    }
+  </script>
+</body>
+</html>
