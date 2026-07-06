@@ -52,21 +52,22 @@ app.post('/api/recommend', async (req, res) => {
     popularityGuidance = '80-90% mainstream/popular/chart-topping. Only very well-known acts.';
   }
 
-  const systemPrompt = `You are a music recommendation engine. ${popularityGuidance}
+  const systemPrompt = `You are a world-class music recommendation engine with deep knowledge of every genre, subgenre, era, and scene. ${popularityGuidance}
 
 CRITICAL: You must FIRST detect what the user is searching for:
 - If the query mentions a specific SONG (e.g. "Bohemian Rhapsody by Queen", "Blinding Lights", "song: Hotel California"), then ALL 10 recommendations MUST be specific SONGS similar to that song. Each "name" field should be the song title, and the search queries should be "song+title+artist+name" format.
 - If the query is just an ARTIST name (e.g. "Radiohead", "Taylor Swift", "artist: Kendrick Lamar"), then ALL 10 recommendations MUST be similar ARTISTS. Each "name" field should be the artist name.
 
-For SONG queries, each recommendation object must have:
-- "name": the SONG title (e.g. "Stairway to Heaven")
-- "type": "song"
-- For Spotify/YouTube/Bandcamp/SoundCloud queries, include BOTH the song title AND artist name (e.g. "stairway+to+heaven+led+zeppelin")
+FOR ARTIST QUERIES — SONIC PROXIMITY IS EVERYTHING:
+- Recommend artists that sound EXTREMELY close to the queried artist. Think: if someone loves Artist X, what artists have an almost identical sound, production style, vocal delivery, instrumentation, tempo, mood, and energy?
+- Prioritize artists in the exact same subgenre or directly adjacent subgenres. Do NOT recommend artists from a completely different genre just because they share a vague "vibe."
+- For each recommendation, the description MUST explain the specific sonic overlap (e.g., "Same hazy shoegaze guitars and whisper-soft vocals as Slowdive" or "Identical trap production with autotuned melodies in the style of Future").
+- If the artist is well-known, dig into their exact niche — side projects of the same members, artists on the same label, artists produced by the same producer, artists from the same local scene/era.
 
-For ARTIST queries, each recommendation object must have:
-- "name": the ARTIST name
-- "type": "artist"
-- Search queries can just be the artist name
+FOR SONG QUERIES — SOUND-ALIKE MATCHING:
+- Recommend songs that share the same BPM range, key/mode feel, instrumental palette, production texture, and emotional tone as the queried song.
+- If the song has a specific sonic signature (e.g., "palm-muted guitar riffs with double bass drums" or "808 bass with triplet hi-hats and reverb-drenched vocals"), match that EXACTLY.
+- The description should pinpoint the sonic match (e.g., "Same driving 4/4 beat, analog synth bassline, and melancholic vocal delivery as Blue Monday").
 
 Respond with ONLY valid JSON, no markdown, no extra text:
 {
@@ -76,9 +77,9 @@ Respond with ONLY valid JSON, no markdown, no extra text:
     {
       "name": "Song Title or Artist Name",
       "type": "song" or "artist",
-      "genre": "genre",
+      "genre": "specific subgenre (not just 'rock' — use 'shoegaze', 'math rock', 'cloud rap', etc.)",
       "year": "approx year or null",
-      "description": "1 sentence why this matches the vibe/sound/style",
+      "description": "1 sentence pinpointing the EXACT sonic overlap with the query",
       "popularityLevel": "underground|indie|mid|mainstream|superstar",
       "spotifyQuery": "url-encoded search query",
       "youtubeQuery": "url-encoded search query",
@@ -87,9 +88,9 @@ Respond with ONLY valid JSON, no markdown, no extra text:
     }
   ]
 }
-Rules: exactly 10 recommendations, NEVER include the original query, be sonically/style similar, use real searchable query strings.`;
+Rules: exactly 10 recommendations, NEVER include the original query, prioritize extreme sonic similarity over broad genre matching, use real searchable query strings.`;
 
-  const userPrompt = `Find music similar to: "${query}". The user wants ${popBias}% mainstream / ${indieBias}% indie bias. First, determine if this is a SONG or an ARTIST query. If it's a specific song, return 10 similar SONGS (each with artist name in search queries). If it's just an artist, return 10 similar ARTISTS. Be specific and accurate.`;
+  const userPrompt = `Find music similar to: "${query}". The user wants ${popBias}% mainstream / ${indieBias}% indie bias. First, determine if this is a SONG or an ARTIST query. If it's a specific song, return 10 similar SONGS (each with artist name in search queries). If it's just an artist, return 10 similar ARTISTS. CRITICAL: The recommendations must sound EXTREMELY close to the query — like you're recommending artists that could be mistaken for the queried artist, or songs that share the exact same sonic DNA. Be hyper-specific about the sound overlap in every description.`;
 
   try {
     const response = await fetch(OPENROUTER_URL, {
