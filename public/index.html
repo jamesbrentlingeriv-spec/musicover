@@ -149,6 +149,75 @@
       margin-top: 8px;
     }
 
+    /* API Key toggle */
+    .api-key-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text2);
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-bottom: 16px;
+      user-select: none;
+      transition: var(--transition);
+    }
+    .api-key-toggle:hover {
+      color: var(--accent);
+    }
+    .api-key-section {
+      display: none;
+      margin-bottom: 20px;
+    }
+    .api-key-section.open {
+      display: block;
+    }
+    #apiKeyInput {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--surface3);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: 'SF Mono', 'Consolas', monospace;
+      outline: none;
+      transition: var(--transition);
+    }
+    #apiKeyInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    #apiKeyInput::placeholder {
+      color: var(--text2);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.85rem;
+    }
+    .api-key-hint {
+      font-size: 0.75rem;
+      color: var(--text2);
+      margin-top: 6px;
+    }
+    .api-key-hint a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .api-key-status {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+    .api-key-status.set {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+    }
+    .api-key-status.unset {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+    }
+
     /* Search card */
     .search-card {
       background: var(--surface);
@@ -577,6 +646,17 @@
     </header>
 
     <div class="search-card">
+      <div class="api-key-toggle" id="apiKeyToggle">
+        🔑 API Key <span class="api-key-status unset" id="apiKeyStatus">Not Set</span>
+        <span style="font-size:0.7rem;">▸</span>
+      </div>
+      <div class="api-key-section" id="apiKeySection">
+        <input type="password" id="apiKeyInput" placeholder="Paste your OpenRouter API key here..." autocomplete="off">
+        <div class="api-key-hint">
+          Get a free key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> · Stored only in your browser
+        </div>
+      </div>
+
       <div class="search-row">
         <div class="search-input-wrap">
           <span class="search-icon">🔍</span>

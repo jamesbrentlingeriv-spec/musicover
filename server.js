@@ -16,11 +16,14 @@ const SITE_NAME = process.env.SITE_NAME || 'Musicovery';
 app.post('/api/recommend', async (req, res) => {
   console.log('>>> POST /api/recommend received');
 
-  if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === 'your-openrouter-api-key-here') {
-    return res.status(500).json({ error: 'API key not configured. Edit the .env file with your OpenRouter API key from https://openrouter.ai/keys' });
-  }
+  const { query, popularityBias, apiKey } = req.body;
 
-  const { query, popularityBias } = req.body;
+  // Use apiKey from request body, fall back to env variable
+  const effectiveApiKey = (apiKey && apiKey.trim()) || OPENROUTER_API_KEY || '';
+
+  if (!effectiveApiKey || effectiveApiKey === 'your-openrouter-api-key-here') {
+    return res.status(400).json({ error: 'Please enter your OpenRouter API key. Get one free at https://openrouter.ai/keys' });
+  }
 
   if (!query || query.trim().length === 0) {
     return res.status(400).json({ error: 'Please enter a song or artist.' });
@@ -86,7 +89,7 @@ Rules: exactly 10 recommendations, NEVER include the original query, be sonicall
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${effectiveApiKey}`,
         'HTTP-Referer': SITE_URL,
         'X-Title': SITE_NAME
       },
