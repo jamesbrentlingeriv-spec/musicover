@@ -1,11 +1,12 @@
 {
-  "name": "musicover",
+  "name": "musicovery",
   "version": "1.0.0",
-  "description": "AI-powered music discovery app - find similar songs & artists across Spotify, YouTube, Bandcamp and more",
+  "description": "Musicovery - AI-powered music discovery app. Find similar songs & artists across Spotify, YouTube, Bandcamp and more",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "vercel-build": "echo Vercel build complete"
   },
   "dependencies": {
     "express": "^4.18.2",
