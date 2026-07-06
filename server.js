@@ -12,7 +12,14 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const SITE_URL = process.env.SITE_URL || process.env.VERCEL_URL || 'http://localhost:3000';
 const SITE_NAME = process.env.SITE_NAME || 'Musicovery';
 
-// ---------- API ROUTE (defined BEFORE static middleware) ----------
+// ---------- API ROUTES (defined BEFORE static middleware) ----------
+
+// Let the frontend know if a server-side API key is already configured
+app.get('/api/key-status', (req, res) => {
+  const hasKey = !!(OPENROUTER_API_KEY && OPENROUTER_API_KEY.trim() !== '' && OPENROUTER_API_KEY !== 'your-openrouter-api-key-here');
+  res.json({ serverKeyConfigured: hasKey });
+});
+
 app.post('/api/recommend', async (req, res) => {
   console.log('>>> POST /api/recommend received');
 

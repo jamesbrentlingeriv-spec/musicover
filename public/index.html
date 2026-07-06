@@ -758,12 +758,29 @@
       updateApiKeyStatus();
     });
 
-    // Load saved key on startup
-    updateApiKeyStatus();
-    if (getSavedApiKey()) {
-      // If key exists, keep section closed by default
-      apiKeySection.classList.remove('open');
+    // Load saved key on startup, but first check if server has a key configured
+    async function checkServerKeyStatus() {
+      try {
+        const resp = await fetch('/api/key-status');
+        if (resp.ok) {
+          const { serverKeyConfigured } = await resp.json();
+          if (serverKeyConfigured) {
+            // Server already has the key (set in Vercel env vars) — hide the input
+            apiKeyToggle.style.display = 'none';
+            apiKeySection.style.display = 'none';
+            return;
+          }
+        }
+      } catch (e) {
+        // /api/key-status not available (e.g. running as static HTML), show input
+      }
+      // Server has no key — show the input for user to provide their own
+      updateApiKeyStatus();
+      if (getSavedApiKey()) {
+        apiKeySection.classList.remove('open');
+      }
     }
+    checkServerKeyStatus();
 
     // Update badge based on slider
     function updateBadge(value) {
