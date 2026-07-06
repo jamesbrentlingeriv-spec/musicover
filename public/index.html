@@ -712,6 +712,59 @@
     const resultsSubtitle = document.getElementById('resultsSubtitle');
     const recGrid = document.getElementById('recGrid');
 
+    // ----- API Key Management -----
+    const apiKeyToggle = document.getElementById('apiKeyToggle');
+    const apiKeySection = document.getElementById('apiKeySection');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const apiKeyStatus = document.getElementById('apiKeyStatus');
+    const LOCALSTORAGE_KEY = 'musicovery_api_key';
+
+    function getSavedApiKey() {
+      try {
+        return localStorage.getItem(LOCALSTORAGE_KEY) || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function saveApiKey(key) {
+      try {
+        localStorage.setItem(LOCALSTORAGE_KEY, key);
+      } catch (e) {
+        // localStorage may not be available
+      }
+    }
+
+    function updateApiKeyStatus() {
+      const key = getSavedApiKey();
+      if (key && key.trim().length > 10) {
+        apiKeyStatus.textContent = 'Set ✓';
+        apiKeyStatus.className = 'api-key-status set';
+        apiKeyInput.value = key;
+      } else {
+        apiKeyStatus.textContent = 'Not Set';
+        apiKeyStatus.className = 'api-key-status unset';
+      }
+    }
+
+    // Toggle API key section
+    apiKeyToggle.addEventListener('click', () => {
+      apiKeySection.classList.toggle('open');
+    });
+
+    // Auto-save key on input
+    apiKeyInput.addEventListener('input', () => {
+      saveApiKey(apiKeyInput.value.trim());
+      updateApiKeyStatus();
+    });
+
+    // Load saved key on startup
+    updateApiKeyStatus();
+    if (getSavedApiKey()) {
+      // If key exists, keep section closed by default
+      apiKeySection.classList.remove('open');
+    }
+
     // Update badge based on slider
     function updateBadge(value) {
       biasBadge.classList.remove('badge-indie', 'badge-mid', 'badge-mainstream');
@@ -763,7 +816,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query: query,
-            popularityBias: parseInt(popularitySlider.value)
+            popularityBias: parseInt(popularitySlider.value),
+            apiKey: getSavedApiKey()
           })
         });
 
