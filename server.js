@@ -9,8 +9,8 @@ app.use(express.json());
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const SITE_URL = process.env.SITE_URL || 'http://localhost:3000';
-const SITE_NAME = process.env.SITE_NAME || 'MusicOver';
+const SITE_URL = process.env.SITE_URL || process.env.VERCEL_URL || 'http://localhost:3000';
+const SITE_NAME = process.env.SITE_NAME || 'Musicovery';
 
 // ---------- API ROUTE (defined BEFORE static middleware) ----------
 app.post('/api/recommend', async (req, res) => {
@@ -142,11 +142,17 @@ Rules: exactly 10 recommendations, NEVER include the original query, be sonicall
 // ---------- STATIC FILES (MUST come AFTER API routes) ----------
 app.use(express.static('public'));
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`MusicOver server running at http://localhost:${PORT}`);
-  console.log(`Endpoints: POST /api/recommend, GET / (index.html)`);
-  if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === 'your-openrouter-api-key-here') {
-    console.log('WARNING: No valid OPENROUTER_API_KEY found. Set it in .env file.');
-  }
-});
+// Export for Vercel serverless
+module.exports = app;
+
+// Only listen when running locally (not on Vercel)
+if (process.env.VERCEL !== '1') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Musicovery server running at http://localhost:${PORT}`);
+    console.log(`Endpoints: POST /api/recommend, GET / (index.html)`);
+    if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === 'your-openrouter-api-key-here') {
+      console.log('WARNING: No valid OPENROUTER_API_KEY found. Set it in .env file.');
+    }
+  });
+}
